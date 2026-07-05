@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Caddy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pine:#14432F;
+    --pine-deep:#0C2E20;
+    --turf:#2C7A50;
+    --paper:#F7F4EA;
+    --card:#FFFFFF;
+    --ink:#1B211D;
+    --ink-soft:#5C665F;
+    --flag:#C8371E;
+    --line:#DDD8C8;
+    --plate-text:#F7F4EA;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    padding:max(env(safe-area-inset-top),14px) 16px calc(env(safe-area-inset-bottom) + 24px);
+    max-width:480px;margin:0 auto;
+    -webkit-user-select:none;user-select:none;
+  }
+  .display{font-family:"Barlow Condensed",-apple-system,sans-serif}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+
+  /* ---------- header ---------- */
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .wordmark{font-family:"Barlow Condensed";font-weight:800;font-size:30px;letter-spacing:.04em;color:var(--pine)}
+  .wordmark span{color:var(--flag)}
+  .icon-btn{
+    border:1.5px solid var(--line);background:var(--card);border-radius:12px;
+    width:42px;height:42px;font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+
+  /* ---------- weather chip ---------- */
+  .weather{
+    background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);
+    padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer;
+  }
+  .weather .arrow{
+    width:34px;height:34px;border-radius:50%;background:var(--pine);color:var(--plate-text);
+    display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto;
+    transition:transform .4s ease;
+  }
+  .weather .txt{flex:1;min-width:0}
+  .weather .big{font-weight:700;font-size:15px}
+  .weather .sub{font-size:12.5px;color:var(--ink-soft)}
+  .weather .refresh{font-size:12px;color:var(--turf);font-weight:600;white-space:nowrap}
+
+  /* ---------- input card ---------- */
+  .card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+  .label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px}
+
+  .dist-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .step{
+    width:56px;height:56px;border-radius:14px;border:1.5px solid var(--line);background:var(--paper);
+    font-size:22px;font-weight:700;color:var(--pine);cursor:pointer;flex:0 0 auto;
+  }
+  .step:active{background:var(--line)}
+  .dist{
+    flex:1;text-align:center;font-family:"Barlow Condensed";font-weight:800;font-size:64px;line-height:1;
+    color:var(--ink);border:none;background:transparent;width:100%;outline:none;
+  }
+  .dist-unit{text-align:center;font-size:11px;letter-spacing:.14em;color:var(--ink-soft);text-transform:uppercase;margin-top:-4px;margin-bottom:4px}
+
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{
+    flex:1 1 auto;min-width:60px;padding:12px 4px;border-radius:12px;border:1.5px solid var(--line);
+    background:var(--paper);font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;
+  }
+  .seg button.on{background:var(--pine);border-color:var(--pine);color:var(--plate-text)}
+  .seg-gap{height:14px}
+
+  /* ---------- ask buttons ---------- */
+  .ask-row{display:flex;gap:10px;margin-bottom:14px}
+  .ask{
+    flex:1;padding:18px;border-radius:var(--radius);border:none;background:var(--flag);color:#fff;
+    font-family:"Barlow Condensed";font-weight:800;font-size:26px;letter-spacing:.05em;cursor:pointer;
+  }
+  .ask:active{filter:brightness(.9)}
+  .mic{
+    width:64px;border-radius:var(--radius);border:1.5px solid var(--pine);background:var(--card);
+    font-size:24px;cursor:pointer;color:var(--pine);
+  }
+  .mic.listening{background:var(--flag);border-color:var(--flag);color:#fff;animation:pulse 1s infinite}
+  @keyframes pulse{50%{transform:scale(.94)}}
+  .heard{font-size:13px;color:var(--ink-soft);text-align:center;min-height:18px;margin:-6px 0 10px;font-style:italic}
+
+  /* ---------- answer plate (signature) ---------- */
+  .plate{
+    background:linear-gradient(170deg,var(--pine) 0%,var(--pine-deep) 100%);
+    border-radius:22px;padding:22px 20px 18px;color:var(--plate-text);
+    box-shadow:0 10px 24px rgba(12,46,32,.28);
+    display:none;margin-bottom:14px;
+  }
+  .plate.show{display:block;animation:rise .35s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .plate .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.75;margin-bottom:2px}
+  .plate .club{
+    font-family:"Barlow Condensed";font-weight:800;font-size:88px;line-height:.95;letter-spacing:.01em;
+    margin:2px 0 10px;
+  }
+  .plate .plays{font-family:"IBM Plex Mono";font-size:14px;margin-bottom:12px}
+  .plate .plays b{font-weight:600;color:#FFD9A8}
+  .ledger{border-top:1px solid rgba(247,244,234,.25);padding-top:10px;font-family:"IBM Plex Mono";font-size:12.5px;line-height:1.9}
+  .ledger .row{display:flex;justify-content:space-between}
+  .ledger .row span:last-child{color:#FFD9A8}
+  .plate .tip{margin-top:12px;font-size:13.5px;line-height:1.45;opacity:.92}
+  .fb{margin-top:14px;border-top:1px solid rgba(247,244,234,.25);padding-top:12px}
+  .fb .label{color:rgba(247,244,234,.7);margin-bottom:8px}
+  .fb-row{display:flex;gap:6px}
+  .fb-row button{
+    flex:1;padding:11px 2px;border-radius:11px;border:1.5px solid rgba(247,244,234,.35);
+    background:transparent;color:var(--plate-text);font-size:13px;font-weight:600;cursor:pointer;
+  }
+  .fb-row button:active{background:rgba(247,244,234,.15)}
+  .fb-ack{font-size:12.5px;margin-top:9px;color:#FFD9A8;min-height:16px}
+
+  /* ---------- settings overlay ---------- */
+  .overlay{
+    position:fixed;inset:0;background:var(--paper);z-index:20;display:none;overflow-y:auto;
+    padding:max(env(safe-area-inset-top),14px) 16px 40px;max-width:480px;margin:0 auto;
+  }
+  .overlay.show{display:block}
+  .overlay header{margin-bottom:10px}
+  .club-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+  .club-row .nm{flex:1;font-weight:600;font-size:15px}
+  .club-row input{
+    width:76px;text-align:center;font-family:"IBM Plex Mono";font-size:16px;padding:8px 4px;
+    border:1.5px solid var(--line);border-radius:8px;background:var(--paper);
+  }
+  .club-row .del{border:none;background:none;color:var(--flag);font-size:18px;cursor:pointer;padding:4px}
+  .ghost{
+    width:100%;padding:14px;border-radius:12px;border:1.5px dashed var(--line);background:none;
+    color:var(--ink-soft);font-weight:600;font-size:14px;cursor:pointer;margin-top:4px;
+  }
+  .manual-weather{display:none;margin-top:10px}
+  .manual-weather.show{display:block}
+  .mw-grid{display:flex;gap:8px}
+  .mw-grid > div{flex:1}
+  .mw-grid input,.mw-grid select{
+    width:100%;padding:10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);
+    font-size:15px;font-family:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  .note{font-size:12px;color:var(--ink-soft);line-height:1.5;margin-top:10px}
+  button:focus-visible,input:focus-visible{outline:3px solid var(--turf);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">CADDY<span>.</span></div>
+  <div style="display:flex;gap:8px">
+    <button class="icon-btn" id="voiceToggle" aria-label="Toggle voice replies">🔊</button>
+    <button class="icon-btn" id="settingsBtn" aria-label="My bag settings">⛳️</button>
+  </div>
+</header>
+
+<div class="weather" id="weatherChip">
+  <div class="arrow" id="windArrow">↑</div>
+  <div class="txt">
+    <div class="big" id="wBig">Weather not set</div>
+    <div class="sub" id="wSub">Tap to use your location, or set manually in settings</div>
+  </div>
+  <div class="refresh" id="wAction">Get weather</div>
+</div>
+
+<div class="card">
+  <div class="label">Distance to target</div>
+  <div class="dist-row">
+    <button class="step" id="minus">−5</button>
+    <input class="dist" id="distance" type="tel" inputmode="numeric" value="150" maxlength="3" aria-label="Distance in yards">
+    <button class="step" id="plus">+5</button>
+  </div>
+  <div class="dist-unit">yards</div>
+
+  <div class="label">Lie</div>
+  <div class="seg" id="lieSeg">
+    <button data-v="tee">Tee</button>
+    <button data-v="fairway" class="on">Fairway</button>
+    <button data-v="rough">Rough</button>
+    <button data-v="deep">Deep rough</button>
+    <button data-v="sand">Sand</button>
+  </div>
+  <div class="seg-gap"></div>
+
+  <div class="label">Wind on this shot</div>
+  <div class="seg" id="windSeg">
+    <button data-v="none" class="on">Calm / n.a.</button>
+    <button data-v="into">Into</button>
+    <button data-v="down">Helping</button>
+    <button data-v="cross">Cross</button>
+  </div>
+  <div class="seg-gap"></div>
+
+  <div class="label">Elevation to target</div>
+  <div class="seg" id="elevSeg">
+    <button data-v="up">Uphill</button>
+    <button data-v="flat" class="on">Flat</button>
+    <button data-v="downhill">Downhill</button>
+  </div>
+</div>
+
+<div class="ask-row">
+  <button class="ask" id="askBtn">WHAT CLUB?</button>
+  <button class="mic" id="micBtn" aria-label="Ask by voice" style="display:none">🎙️</button>
+</div>
+<div class="heard" id="heard"></div>
+
+<div class="plate" id="plate" role="status">
+  <div class="eyebrow">Caddy says</div>
+  <div class="club display" id="plateClub">7 IRON</div>
+  <div class="plays mono" id="platePlays"></div>
+  <div class="ledger" id="ledger"></div>
+  <div class="tip" id="plateTip"></div>
+  <div class="fb" id="fb">
+    <div class="label">How did it go?</div>
+    <div class="fb-row">
+      <button data-fb="short">Short</button>
+      <button data-fb="long">Long</button>
+      <button data-fb="good">Flush ✓</button>
+      <button data-fb="mishit">Mishit</button>
+    </div>
+    <div class="fb-ack" id="fbAck"></div>
+  </div>
+</div>
+
+<!-- ---------- settings ---------- -->
+<div class="overlay" id="settings">
+  <header>
+    <div class="wordmark" style="font-size:24px">MY BAG</div>
+    <button class="icon-btn" id="closeSettings" aria-label="Close settings">✕</button>
+  </header>
+
+  <div class="card">
+    <div class="label">Carry distances (yards)</div>
+    <div id="clubList"></div>
+    <button class="ghost" id="addClub">+ Add a club</button>
+    <button class="ghost" id="resetLearn">Reset learned adjustments &amp; today's trend</button>
+    <button class="ghost" id="resetBag">Reset to default bag</button>
+  </div>
+
+  <div class="card">
+    <div class="label">Manual weather</div>
+    <div class="note" style="margin-top:0;margin-bottom:10px">Use this if location weather isn't available.</div>
+    <div class="mw-grid">
+      <div>
+        <div class="label">Wind mph</div>
+        <input type="tel" inputmode="numeric" id="mWind" placeholder="10">
+      </div>
+      <div>
+        <div class="label">Temp °F</div>
+        <input type="tel" inputmode="numeric" id="mTemp" placeholder="70">
+      </div>
+      <div>
+        <div class="label">Rain?</div>
+        <select id="mRain"><option value="0">Dry</option><option value="1">Raining</option></select>
+      </div>
+    </div>
+    <button class="ghost" id="mSave">Save manual weather</button>
+  </div>
+
+  <div class="note">
+    How Caddy adjusts: headwind adds ~1% per mph to the number you need to cover; helping wind takes off ~0.5% per mph.
+    Cold air below 70°F adds ~2 yds per 10°F. Rain adds ~5 yds. Rough and deep rough add club because clean contact is harder.
+    <br><br>
+    How Caddy learns: after each shot, tell it Short, Long, Flush, or Mishit. Short/Long nudges that club's number by 2 yds
+    (capped at ±12, so one bad day can't wreck your bag). Flush slowly confirms your number back toward baseline. Mishits are
+    ignored — a chunked wedge says nothing about your wedge distance. And if you're net two or more shots short (or long)
+    today, Caddy leans that way for the rest of the round, then resets tomorrow.
+  </div>
+</div>
+
+<script>
+/* ================= storage adapter =================
+   Works in three environments: Claude artifact viewer
+   (window.storage), a deployed site / saved file
+   (localStorage), or falls back to memory. */
+const store = (() => {
+  const mem = {};
+  const hasArtifact = typeof window.storage?.set === "function";
+  let hasLocal = false;
+  try { localStorage.setItem("__t","1"); localStorage.removeItem("__t"); hasLocal = true; } catch(e){}
+  return {
+    async get(k){
+      try{
+        if (hasArtifact){ const r = await window.storage.get(k); return r ? r.value : null; }
+        if (hasLocal) return localStorage.getItem(k);
+      }catch(e){}
+      return mem[k] ?? null;
+    },
+    async set(k,v){
+      try{
+        if (hasArtifact){ await window.storage.set(k,v); return; }
+        if (hasLocal){ localStorage.setItem(k,v); return; }
+      }catch(e){}
+      mem[k]=v;
+    }
+  };
+})();
+
+/* ================= state ================= */
+const DEFAULT_BAG = [
+  ["Driver",230],["3 Wood",215],["5 Wood",200],["Hybrid",190],
+  ["4 Iron",180],["5 Iron",170],["6 Iron",160],["7 Iron",150],
+  ["8 Iron",140],["9 Iron",130],["PW",120],["GW",105],["SW",90],["LW",75]
+];
+let bag = DEFAULT_BAG.map(c=>({name:c[0],carry:c[1]}));
+let weather = null;           // {tempF, windMph, windDeg, rain, source}
+let lie = "fairway";
+let windRel = "none";
+let lastRec = null;           // {clubName, fbGiven} — what feedback attaches to
+let session = { date: todayKey(), events: [] };   // today's shots: [{club, fb}]
+let learn = {};               // per-club learned carry adjustment, e.g. {"PW": -4}
+let voiceOn = true;           // spoken replies on/off (quiet mode)
+let elev = "flat";            // uphill / flat / downhill
+
+function todayKey(){ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+const clamp = (v,lo,hi)=>Math.min(hi,Math.max(lo,v));
+
+const $ = id => document.getElementById(id);
+
+/* ================= persistence ================= */
+async function loadState(){
+  try{
+    const b = await store.get("caddy_bag");
+    if (b){ const p = JSON.parse(b); if (Array.isArray(p) && p.length) bag = p; }
+    const w = await store.get("caddy_weather");
+    if (w) { weather = JSON.parse(w); renderWeather(); }
+    const l = await store.get("caddy_learn");
+    if (l) learn = JSON.parse(l) || {};
+    const s = await store.get("caddy_session");
+    if (s){ const p = JSON.parse(s); if (p && p.date === todayKey()) session = p; }
+    const v = await store.get("caddy_voice");
+    if (v !== null) voiceOn = v === "1";
+    $("voiceToggle").textContent = voiceOn ? "🔊" : "🔇";
+  }catch(e){}
+  renderBag();
+}
+const saveBag = () => store.set("caddy_bag", JSON.stringify(bag));
+const saveWeather = () => store.set("caddy_weather", JSON.stringify(weather));
+const saveLearn = () => store.set("caddy_learn", JSON.stringify(learn));
+const saveSession = () => store.set("caddy_session", JSON.stringify(session));
+
+/* ================= weather ================= */
+const DIRS = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+const degToDir = d => DIRS[Math.round(((d%360)/22.5))%16];
+
+function renderWeather(){
+  if (!weather){ return; }
+  const {tempF, windMph, windDeg, rain, source} = weather;
+  $("wBig").textContent = `${Math.round(tempF)}°F · wind ${Math.round(windMph)} mph ${windDeg!=null?degToDir(windDeg):""}${rain?" · rain":""}`;
+  $("wSub").textContent = source === "gps" ? "Live from your location — tap to refresh" : "Manual weather — tap to try location";
+  $("wAction").textContent = "↻";
+  if (windDeg != null){
+    // arrow points where wind is blowing TO (deg is where it comes FROM)
+    $("windArrow").style.transform = `rotate(${(windDeg+180)%360}deg)`;
+  }
+}
+
+async function fetchWeather(){
+  $("wBig").textContent = "Getting weather…";
+  $("wSub").textContent = "Requesting your location";
+  if (!navigator.geolocation){ weatherFail("Location not available here"); return; }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const {latitude:lat, longitude:lon} = pos.coords;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&current=temperature_2m,precipitation,wind_speed_10m,wind_direction_10m` +
+        `&temperature_unit=fahrenheit&wind_speed_unit=mph`;
+      const r = await fetch(url);
+      const j = await r.json();
+      const c = j.current;
+      weather = { tempF:c.temperature_2m, windMph:c.wind_speed_10m, windDeg:c.wind_direction_10m,
+                  rain: c.precipitation > 0 ? 1 : 0, source:"gps" };
+      saveWeather(); renderWeather();
+    }catch(e){ weatherFail("Couldn't reach the weather service"); }
+  }, err=>{
+    weatherFail("Location was blocked");
+  }, {timeout:10000});
+}
+function weatherFail(msg){
+  $("wBig").textContent = msg;
+  $("wSub").textContent = "Set weather manually in settings (⛳️) and Caddy will use that";
+  $("wAction").textContent = "Retry";
+}
+$("weatherChip").addEventListener("click", fetchWeather);
+
+/* ================= recommendation engine ================= */
+function recommend(dist, lie, windRel, w){
+  const ledger = [];
+  let plays = dist;
+
+  // wind
+  const mph = w ? Math.round(w.windMph) : 0;
+  if (windRel === "into" && mph > 0){
+    const add = Math.round(dist * 0.01 * mph);
+    plays += add; ledger.push([`Into wind ${mph} mph`, `+${add}`]);
+  } else if (windRel === "down" && mph > 0){
+    const sub = Math.round(dist * 0.005 * mph);
+    plays -= sub; ledger.push([`Helping wind ${mph} mph`, `−${sub}`]);
+  } else if (windRel === "cross" && mph > 0){
+    ledger.push([`Crosswind ${mph} mph`, "aim"]);
+  }
+
+  // temperature
+  if (w && typeof w.tempF === "number"){
+    const delta = Math.round((70 - w.tempF) / 10 * 2); // +2yd per 10°F below 70
+    if (delta !== 0){
+      plays += delta;
+      ledger.push([ w.tempF < 70 ? `Cold air ${Math.round(w.tempF)}°F` : `Warm air ${Math.round(w.tempF)}°F`,
+                    (delta>0?`+${delta}`:`${delta}`) ]);
+    }
+  }
+
+  // rain
+  if (w && w.rain){ plays += 5; ledger.push(["Rain (less carry/roll)", "+5"]); }
+
+  // lie
+  if (lie === "rough"){ plays += 5; ledger.push(["Rough (contact)", "+5"]); }
+  if (lie === "deep"){ plays += 12; ledger.push(["Deep rough", "+12"]); }
+
+  // elevation — about half a club either way
+  if (elev === "up"){ plays += 8; ledger.push(["Uphill to target", "+8"]); }
+  if (elev === "downhill"){ plays -= 8; ledger.push(["Downhill to target", "−8"]); }
+
+  // today's trend — session feedback (mishits excluded)
+  const shorts = session.events.filter(e=>e.fb==="short").length;
+  const longs  = session.events.filter(e=>e.fb==="long").length;
+  const trend  = clamp((shorts - longs) * 3, -9, 9);   // short today → need more club
+  if (trend !== 0){
+    plays += trend;
+    ledger.push([ trend > 0 ? "You're running short today" : "You're flying it today",
+                  (trend>0?`+${trend}`:`${trend}`) ]);
+  }
+
+  plays = Math.max(10, Math.round(plays));
+
+  // pick club using EFFECTIVE carries (stored carry + learned adjustment)
+  const eff = c => c.carry + (learn[c.name] || 0);
+  const sorted = [...bag].sort((a,b)=>eff(a)-eff(b));
+  let club = sorted.find(c => eff(c) >= plays);
+  let tip = "";
+
+  if (!club){
+    club = sorted[sorted.length-1];
+    tip = `That's more than your longest club carries — hit ${club.name} and plan the next shot.`;
+  } else {
+    const gap = eff(club) - plays;
+    if (gap >= 8) tip = `Smooth swing — this ${club.name} has ${gap} yards in hand.`;
+    else if (gap <= 2) tip = `Full send. If you're between clubs, the extra club and an easy swing is the caddy play.`;
+    const adj = learn[club.name] || 0;
+    if (adj <= -3) tip += ` (Your ${club.name} has been trending ~${Math.abs(adj)} yds short lately — already factored in.)`;
+    if (adj >=  3) tip += ` (Your ${club.name} has been trending ~${adj} yds long lately — already factored in.)`;
+  }
+
+  if (lie === "deep") tip = `From deep rough, priority one is getting back to the fairway. ${tip}`;
+  if (lie === "sand") tip = `From sand, distance control is unreliable — take one extra club, ball slightly back, and commit. ${tip}`;
+  if (windRel === "cross" && mph > 5) tip += ` Aim ${Math.round(mph/2)}–${mph} yards ${crossAimSide(w)} of your target and let the wind work.`;
+
+  return { club, plays, ledger, tip: tip.trim() };
+}
+function crossAimSide(w){ return "into the wind"; }
+
+/* ================= UI: ask ================= */
+function ask(fromVoice){
+  const dist = parseInt($("distance").value, 10);
+  if (!dist || dist < 10 || dist > 400){ $("heard").textContent = "Enter a distance between 10 and 400 yards."; return; }
+  const res = recommend(dist, lie, windRel, weather);
+
+  $("plateClub").textContent = res.club.name.toUpperCase();
+  $("platePlays").innerHTML = res.ledger.length
+    ? `${dist} yds plays as <b>${res.plays}</b>`
+    : `${dist} yds, no adjustments`;
+  $("ledger").innerHTML = res.ledger.map(r=>`<div class="row"><span>${r[0]}</span><span>${r[1]}</span></div>`).join("");
+  $("plateTip").textContent = res.tip;
+  lastRec = { clubName: res.club.name, fbGiven: false };
+  $("fbAck").textContent = "";
+  $("fb").querySelectorAll("button").forEach(b=>b.disabled=false);
+  $("plate").classList.add("show");
+  $("plate").scrollIntoView({behavior:"smooth", block:"nearest"});
+
+  if (fromVoice) speak(`${res.plays === dist ? dist : "Plays as " + res.plays}. Hit your ${res.club.name}.`);
+}
+$("askBtn").addEventListener("click", ()=>ask(false));
+
+/* ================= feedback learning ================= */
+function applyFeedback(fb){
+  if (!lastRec || lastRec.fbGiven) return null;
+  // roll the session date if a round crosses midnight / app left open
+  if (session.date !== todayKey()) session = { date: todayKey(), events: [] };
+  lastRec.fbGiven = true;
+
+  let msg;
+  if (fb === "mishit"){
+    msg = "No worries — mishits don't count against your numbers.";
+  } else if (fb === "good"){
+    session.events.push({ club: lastRec.clubName, fb }); saveSession();
+    // a flush confirms the number: decay any learned adjustment gently toward 0
+    const a = learn[lastRec.clubName] || 0;
+    if (a !== 0){ learn[lastRec.clubName] = a > 0 ? a - 1 : a + 1; saveLearn(); }
+    msg = "Nice. That confirms your number.";
+  } else {
+    session.events.push({ club: lastRec.clubName, fb }); saveSession();
+    // short/long: nudge this club's effective carry (±2 yds, capped ±12)
+    const delta = fb === "short" ? -2 : 2;
+    learn[lastRec.clubName] = clamp((learn[lastRec.clubName] || 0) + delta, -12, 12);
+    saveLearn();
+    const shorts = session.events.filter(x=>x.fb==="short").length;
+    const longs  = session.events.filter(x=>x.fb==="long").length;
+    const net = shorts - longs;
+    msg = fb === "short"
+      ? `Got it — trimming your ${lastRec.clubName} a touch.`
+      : `Got it — your ${lastRec.clubName} is flying today.`;
+    if (net >= 2) msg += " You're running short today, so I'll lean toward more club the rest of the round.";
+    if (net <= -2) msg += " You've got extra pop today, so I'll lean toward less club the rest of the round.";
+  }
+  $("fbAck").textContent = msg;
+  $("fb").querySelectorAll("button").forEach(x=>x.disabled=true); // one feedback per shot
+  return msg;
+}
+
+$("fb").addEventListener("click", e=>{
+  const b = e.target.closest("button[data-fb]"); if(!b) return;
+  applyFeedback(b.dataset.fb);
+});
+
+/* distance controls */
+$("minus").addEventListener("click", ()=>{ $("distance").value = Math.max(10, (parseInt($("distance").value)||150) - 5); });
+$("plus").addEventListener("click",  ()=>{ $("distance").value = Math.min(400,(parseInt($("distance").value)||150) + 5); });
+
+/* segmented controls */
+function segWire(id, set){
+  $(id).addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    $(id).querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); set(b.dataset.v);
+  });
+}
+segWire("lieSeg",  v=>lie=v);
+segWire("windSeg", v=>windRel=v);
+segWire("elevSeg", v=>elev=v);
+
+/* voice on/off (quiet mode) */
+$("voiceToggle").addEventListener("click", ()=>{
+  voiceOn = !voiceOn;
+  $("voiceToggle").textContent = voiceOn ? "🔊" : "🔇";
+  store.set("caddy_voice", voiceOn ? "1" : "0");
+  if (!voiceOn) try{ speechSynthesis.cancel(); }catch(e){}
+});
+
+/* ================= voice ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+if (SR){
+  $("micBtn").style.display = "block";
+  rec = new SR();
+  rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 1;
+  rec.onresult = e=>{
+    const said = e.results[0][0].transcript.toLowerCase();
+    $("heard").textContent = `“${said}”`;
+    handleUtterance(said);
+  };
+  rec.onend  = ()=> $("micBtn").classList.remove("listening");
+  rec.onerror= ()=> { $("micBtn").classList.remove("listening"); $("heard").textContent = "Didn't catch that — tap the mic and try again."; };
+  $("micBtn").addEventListener("click", ()=>{
+    $("micBtn").classList.add("listening");
+    // a real caddy follows up: if the last shot hasn't been reported, ask about it first
+    if (lastRec && !lastRec.fbGiven){
+      $("heard").textContent = `How'd the ${lastRec.clubName} go? Say short, long, flush, or mishit — or roll it into your next ask: “short — now 140 from the fairway.”`;
+      if (voiceOn){
+        speakThen(`How'd the ${lastRec.clubName} go?`, startListening);
+        return;
+      }
+    } else {
+      $("heard").textContent = "Listening…";
+    }
+    startListening();
+  });
+}
+function startListening(){ try{ rec.start(); }catch(e){} }
+
+function handleUtterance(t){
+  // 1) feedback words about the last shot (mishit synonyms amateurs actually say)
+  let fbMsg = null;
+  if (lastRec && !lastRec.fbGiven){
+    if (/mis.?hit|chunk|fat|thin|topped|shank|duff/.test(t)) fbMsg = applyFeedback("mishit");
+    else if (/flush|pure|perfect|good|nailed|striped/.test(t)) fbMsg = applyFeedback("good");
+    else if (/short/.test(t) && !/short side/.test(t)) fbMsg = applyFeedback("short");
+    else if (/long|over|flew|airmail/.test(t)) fbMsg = applyFeedback("long");
+  }
+  // 2) does the same utterance also contain a new ask (a distance)?
+  const hasDistance = /\d{2,3}/.test(t);
+  if (hasDistance){
+    parseVoice(t);
+    ask(true);            // ask() speaks the new recommendation if voice is on
+  } else if (fbMsg){
+    if (voiceOn) speak(fbMsg);   // feedback only — acknowledge and stop
+  } else {
+    $("heard").textContent = "Tell me a distance — like “150 from the rough into the wind.”";
+    if (voiceOn) speak("Tell me a distance.");
+  }
+}
+function parseVoice(t){
+  const num = t.match(/(\d{2,3})/);
+  if (num) $("distance").value = num[1];
+  const setSeg = (id,v)=>{ $(id).querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.v===v)); };
+  if (/deep/.test(t)){ lie="deep"; setSeg("lieSeg","deep"); }
+  else if (/rough/.test(t)){ lie="rough"; setSeg("lieSeg","rough"); }
+  else if (/sand|bunker/.test(t)){ lie="sand"; setSeg("lieSeg","sand"); }
+  else if (/tee/.test(t)){ lie="tee"; setSeg("lieSeg","tee"); }
+  else if (/fairway/.test(t)){ lie="fairway"; setSeg("lieSeg","fairway"); }
+  if (/into|against/.test(t)){ windRel="into"; setSeg("windSeg","into"); }
+  else if (/down\s?wind|helping|with the wind/.test(t)){ windRel="down"; setSeg("windSeg","down"); }
+  else if (/cross/.test(t)){ windRel="cross"; setSeg("windSeg","cross"); }
+  else if (/no wind|calm/.test(t)){ windRel="none"; setSeg("windSeg","none"); }
+  if (/up\s?hill|elevated|raised/.test(t)){ elev="up"; setSeg("elevSeg","up"); }
+  else if (/down\s?hill|below/.test(t)){ elev="downhill"; setSeg("elevSeg","downhill"); }
+  else if (/flat/.test(t)){ elev="flat"; setSeg("elevSeg","flat"); }
+}
+function speak(text){
+  if (!voiceOn) return;
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1; speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){}
+}
+function speakThen(text, next){
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1;
+    u.onend = ()=> setTimeout(next, 150);   // brief gap so the mic doesn't hear the prompt
+    u.onerror = ()=> next();
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){ next(); }
+}
+
+/* ================= settings ================= */
+$("settingsBtn").addEventListener("click", ()=> $("settings").classList.add("show"));
+$("closeSettings").addEventListener("click", ()=>{ $("settings").classList.remove("show"); saveBag(); });
+
+function renderBag(){
+  $("clubList").innerHTML = "";
+  bag.forEach((c,i)=>{
+    const row = document.createElement("div");
+    row.className = "club-row";
+    const a = learn[c.name] || 0;
+    const badge = a !== 0 ? ` <span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:${a<0?'var(--flag)':'var(--turf)'}">(${a>0?'+':''}${a} learned)</span>` : "";
+    row.innerHTML = `<div class="nm">${c.name}${badge}</div>
+      <input type="tel" inputmode="numeric" value="${c.carry}" aria-label="${c.name} carry yards">
+      <button class="del" aria-label="Remove ${c.name}">✕</button>`;
+    row.querySelector("input").addEventListener("change", e=>{
+      const v = parseInt(e.target.value)||c.carry; bag[i].carry = v; saveBag();
+    });
+    row.querySelector(".del").addEventListener("click", ()=>{
+      bag.splice(i,1); saveBag(); renderBag();
+    });
+    $("clubList").appendChild(row);
+  });
+}
+$("addClub").addEventListener("click", ()=>{
+  const name = prompt("Club name (e.g. 2 Hybrid):");
+  if (!name) return;
+  const carry = parseInt(prompt("Carry distance in yards:"),10);
+  if (!carry) return;
+  bag.push({name, carry}); saveBag(); renderBag();
+});
+$("resetBag").addEventListener("click", ()=>{
+  bag = DEFAULT_BAG.map(c=>({name:c[0],carry:c[1]})); saveBag(); renderBag();
+});
+$("resetLearn").addEventListener("click", ()=>{
+  learn = {}; saveLearn();
+  session = { date: todayKey(), events: [] }; saveSession();
+  renderBag();
+  $("resetLearn").textContent = "Cleared ✓";
+  setTimeout(()=>{ $("resetLearn").textContent = "Reset learned adjustments & today's trend"; }, 1500);
+});
+
+$("mSave").addEventListener("click", ()=>{
+  const windMph = parseInt($("mWind").value)||0;
+  const tempF = parseInt($("mTemp").value)||70;
+  const rain = parseInt($("mRain").value)||0;
+  weather = { tempF, windMph, windDeg:null, rain, source:"manual" };
+  saveWeather(); renderWeather();
+  $("settings").classList.remove("show");
+});
+
+loadState();
+</script>
+</body>
+</html>
