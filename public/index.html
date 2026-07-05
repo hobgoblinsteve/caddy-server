@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Caddy</title>
+<title>Caddie</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -162,7 +162,7 @@
 <body>
 
 <header>
-  <div class="wordmark">CADDY<span>.</span></div>
+  <div class="wordmark">CADDIE<span>.</span></div>
   <div style="display:flex;gap:8px">
     <button class="icon-btn" id="voiceToggle" aria-label="Toggle voice replies">🔊</button>
     <button class="icon-btn" id="settingsBtn" aria-label="My bag settings">⛳️</button>
@@ -221,7 +221,7 @@
 <div class="heard" id="heard"></div>
 
 <div class="plate" id="plate" role="status">
-  <div class="eyebrow">Caddy says</div>
+  <div class="eyebrow">Caddie says</div>
   <div class="club display" id="plateClub">7 IRON</div>
   <div class="plays mono" id="platePlays"></div>
   <div class="ledger" id="ledger"></div>
@@ -274,13 +274,13 @@
   </div>
 
   <div class="note">
-    How Caddy adjusts: headwind adds ~1% per mph to the number you need to cover; helping wind takes off ~0.5% per mph.
+    How Caddie adjusts: headwind adds ~1% per mph to the number you need to cover; helping wind takes off ~0.5% per mph.
     Cold air below 70°F adds ~2 yds per 10°F. Rain adds ~5 yds. Rough and deep rough add club because clean contact is harder.
     <br><br>
-    How Caddy learns: after each shot, tell it Short, Long, Flush, or Mishit. Short/Long nudges that club's number by 2 yds
+    How Caddie learns: after each shot, tell it Short, Long, Flush, or Mishit. Short/Long nudges that club's number by 2 yds
     (capped at ±12, so one bad day can't wreck your bag). Flush slowly confirms your number back toward baseline. Mishits are
     ignored — a chunked wedge says nothing about your wedge distance. And if you're net two or more shots short (or long)
-    today, Caddy leans that way for the rest of the round, then resets tomorrow.
+    today, Caddie leans that way for the rest of the round, then resets tomorrow.
   </div>
 </div>
 
@@ -394,7 +394,7 @@ async function fetchWeather(){
 }
 function weatherFail(msg){
   $("wBig").textContent = msg;
-  $("wSub").textContent = "Set weather manually in settings (⛳️) and Caddy will use that";
+  $("wSub").textContent = "Set weather manually in settings (⛳️) and Caddie will use that";
   $("wAction").textContent = "Retry";
 }
 $("weatherChip").addEventListener("click", fetchWeather);
@@ -461,7 +461,7 @@ function recommend(dist, lie, windRel, w){
   } else {
     const gap = eff(club) - plays;
     if (gap >= 8) tip = `Smooth swing — this ${club.name} has ${gap} yards in hand.`;
-    else if (gap <= 2) tip = `Full send. If you're between clubs, the extra club and an easy swing is the caddy play.`;
+    else if (gap <= 2) tip = `Full send. If you're between clubs, the extra club and an easy swing is the caddie play.`;
     const adj = learn[club.name] || 0;
     if (adj <= -3) tip += ` (Your ${club.name} has been trending ~${Math.abs(adj)} yds short lately — already factored in.)`;
     if (adj >=  3) tip += ` (Your ${club.name} has been trending ~${adj} yds long lately — already factored in.)`;
@@ -578,7 +578,7 @@ if (SR){
   rec.onerror= ()=> { $("micBtn").classList.remove("listening"); $("heard").textContent = "Didn't catch that — tap the mic and try again."; };
   $("micBtn").addEventListener("click", ()=>{
     $("micBtn").classList.add("listening");
-    // a real caddy follows up: if the last shot hasn't been reported, ask about it first
+    // a real caddie follows up: if the last shot hasn't been reported, ask about it first
     if (lastRec && !lastRec.fbGiven){
       $("heard").textContent = `How'd the ${lastRec.clubName} go? Say short, long, flush, or mishit — or roll it into your next ask: “short — now 140 from the fairway.”`;
       if (voiceOn){

@@ -1,6 +1,6 @@
-# Caddy
+# Caddie
 
-A golf caddy with one brain and three doors: a web app, a Siri Shortcut, and SMS.
+A golf caddie with one brain and three doors: a web app, a Siri Shortcut, and SMS.
 Ask it "150 from the rough into the wind, uphill" and it tells you what club to hit —
 adjusted for live weather, temperature, lie, elevation, and what it has learned about
 your game.
@@ -9,10 +9,10 @@ your game.
 
 - `public/index.html` — the full web app (works standalone; add to home screen on a phone)
 - `api/ask.js` — JSON API used by Siri Shortcuts (or anything else)
-- `api/sms.js` — Twilio webhook so you can text the caddy
+- `api/sms.js` — Twilio webhook so you can text the caddie
 - `lib/engine.js` — the shared brain: parsing, club math, feedback learning
 
-## How the caddy talks
+## How the caddie talks
 
 Ask: `150 rough into the wind uphill`
 Feedback after a shot: `short` · `long` · `flush` · `mishit` (chunked/fat/thin/shanked all count as mishit)
@@ -25,7 +25,7 @@ round; resets tomorrow.
 
 ## Siri Shortcut (hands-free with AirPods)
 
-Build a Shortcut named **Ask Caddy**:
+Build a Shortcut named **Ask Caddie**:
 
 1. **Dictate Text**
 2. **Get Current Location** (optional — enables live weather)
@@ -38,7 +38,7 @@ Build a Shortcut named **Ask Caddy**:
 4. **Get Dictionary Value** — key: `speech`
 5. **Speak Text** — the dictionary value
 
-Then: "Hey Siri, Ask Caddy" → speak → hear the club in your AirPods. Assign the
+Then: "Hey Siri, Ask Caddie" → speak → hear the club in your AirPods. Assign the
 shortcut to the Action Button on newer iPhones for one-press access.
 
 ## SMS via Twilio

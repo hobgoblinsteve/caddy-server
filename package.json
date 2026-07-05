@@ -3,5 +3,5 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Caddy — a golf club-selection caddy with one brain and three doors: web app, Siri Shortcut, and SMS."
+  "description": "Caddie — a golf club-selection caddie with one brain and three doors: web app, Siri Shortcut, and SMS."
 }

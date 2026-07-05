@@ -1,4 +1,4 @@
-# Deploying Caddy — no coding, no terminal, ~5 minutes
+# Deploying Caddie — no coding, no terminal, ~5 minutes
 
 Everything happens in a web browser.
 
@@ -26,7 +26,7 @@ Everything happens in a web browser.
 5. ~30 seconds later you get a URL like `https://caddy-xyz.vercel.app`
 
 That URL is your app:
-- Open it on your phone → Share → **Add to Home Screen** = the Caddy app
+- Open it on your phone → Share → **Add to Home Screen** = the Caddie app
 - `https://YOUR-URL/api/ask?user=yourname&q=150+rough` = the API (try it in a browser!)
 
 ## Step 3 (recommended) — Make learning survive restarts
@@ -44,7 +44,7 @@ it just forgets between sessions).
 ## Step 4 (optional) — Siri Shortcut for AirPods
 
 See README.md → "Siri Shortcut". Five actions in the Shortcuts app, then
-"Hey Siri, Ask Caddy" works from a locked phone.
+"Hey Siri, Ask Caddie" works from a locked phone.
 
 ## Step 5 (optional, later) — SMS
 

@@ -1,5 +1,5 @@
 // GET or POST /api/ask
-//   q    — what you'd say to a caddy: "150 rough into the wind uphill", "short", "bag", "course 11735"
+//   q    — what you'd say to a caddie: "150 rough into the wind uphill", "short", "bag", "course 11735"
 //   user — any stable id (a name, a phone number, a device id). Keeps your bag separate from everyone else's.
 //   lat, lon — optional; Siri Shortcuts can attach current location for live weather.
 //
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   const lon = src.lon != null && src.lon !== "" ? parseFloat(src.lon) : null;
 
   if (!userId) return res.status(400).json({ error: "Missing 'user' — pass any stable id, like your name." });
-  if (!q) return res.status(400).json({ error: "Missing 'q' — what would you ask your caddy?" });
+  if (!q) return res.status(400).json({ error: "Missing 'q' — what would you ask your caddie?" });
 
   const user = await getUser(userId);
   const result = await handleMessage(user, q, weatherFor(lat, lon));

@@ -54,7 +54,7 @@ export default async function handler(req, res) {
   }
 
   if (isNew && !result.rec) {
-    result.reply = 'Caddy here. Text me like a caddy: "150 rough into the wind". After the shot, text "short", "long", "flush", or "mishit" and I learn your game. Set weather with "course <town or zip>". Text "help" anytime.';
+    result.reply = 'Caddie here. Text me like a caddie: "150 rough into the wind". After the shot, text "short", "long", "flush", or "mishit" and I learn your game. Set weather with "course <town or zip>". Text "help" anytime.';
   }
 
   await saveUser(from, user);
